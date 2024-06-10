@@ -234,13 +234,15 @@ class SlurmDirectoryManager:
         dst = self.get_exp_dst()
         for src in src_list:
             self.dir_size_validation(src)
+            dst = os.path.join(dst, os.path.basename(os.path.abspath(src)))
             shutil.make_archive(dst, "zip", src)
 
     def create_single_copy(self):
         """creates a copy of the exp for slurm execution"""
         src_list = util.make_iterable(self.get_exp_src())
-        dst = self.get_exp_dst()
+        dst_base = self.get_exp_dst()
         for src in src_list:
+            dst = os.path.join(dst_base, os.path.basename(os.path.abspath(src)))
             self._copy_files(src, dst)
 
     def create_multi_copy(self, num_jobs: int):
@@ -253,13 +255,15 @@ class SlurmDirectoryManager:
         dst_base = self.get_exp_dst()
 
         for i in range(num_jobs):
-            dst = os.path.join(dst_base, str(i))
+            dst_base_i = os.path.join(dst_base, str(i))
             for src in src_list:
+                dst = os.path.join(dst_base_i, os.path.basename(os.path.abspath(src)))
                 self._copy_files(src, dst)
 
         # Add MultiCopy ChangeDir to Slurmconf
         self.slurm_config.slurm_conf[SKEYS.SH_LINES] += "\ncd {} \n".format(
-            os.path.join(self.get_exp_dst(), "$SLURM_ARRAY_TASK_ID")
+            os.path.join(self.get_exp_dst(), "$SLURM_ARRAY_TASK_ID",
+                         src_list[0])
         )
 
     def _copy_files(self, src, dst):
@@ -325,7 +329,10 @@ class SlurmDirectoryManager:
             str: experiment execution directory
         """
         if self.m == self.MODE_COPY or self.m == self.MODE_MULTI:
-            return self.get_exp_dst()
+            src_list = util.make_iterable(self.get_exp_src())
+            dst = self.get_exp_dst()
+            dst = os.path.join(dst, src_list[0])
+            return dst
 
         return self.get_exp_src()
 
@@ -340,15 +347,27 @@ class SlurmDirectoryManager:
 
         pypath = sys.path.copy()
 
-        src = self.get_exp_src()
+        src_list = util.make_iterable(self.get_exp_src())
         dst = self.get_exp_dst()
 
         if self.m == self.MODE_MULTI:
             dst = os.path.join(dst, "$SLURM_ARRAY_TASK_ID")
 
-        new_path = [
-            x.replace(os.path.abspath(src), os.path.abspath(dst)) for x in pypath
-        ]
+        for src in src_list:
+            dst_new = os.path.join(dst, os.path.basename(os.path.abspath(src)))
+            new_path = [x.replace(os.path.abspath(src),
+                                  os.path.abspath(dst_new)) for x in pypath]
+            # Check if new_path and pypath are the same
+            if new_path == pypath:
+                # pypath does not get updated
+                raise cw_error.ConfigKeyError(
+                    "Copied files are not replacing the PYTHONPATH")
+
+            else:
+                # pypath get updated
+                pypath = new_path
+
+
         # return "export PYTHONPATH=" + ":".join(new_path)
         # Maybe this is better?
         return "export PYTHONPATH=$PYTHONPATH:" + ":".join(new_path)
