@@ -1,6 +1,7 @@
 import datetime
 import os
 import re
+from typing import Union, Tuple, List, Literal
 
 try:
     from collections.abc import Mapping, MutableMapping, MutableSequence  # noqa
@@ -172,3 +173,26 @@ def get_file_names_in_directory(directory: str) -> [str]:
     except StopIteration as e:
         print("Cannot read files from directory: ", directory)
     return file_names
+
+
+def make_iterable(data: any, default: Literal['tuple', 'list'] = 'tuple') \
+        -> Union[Tuple, List]:
+    """
+    Make data a tuple or list, i.e. (data) or [data]
+    Args:
+        data: some data
+        default: default type
+    Returns:
+        (data) if it is not a tuple
+    """
+    if isinstance(data, tuple):
+        return data
+    elif isinstance(data, list):
+        return data
+    else:
+        if default == 'tuple':
+            return (data,)  # Do not use tuple()
+        elif default == 'list':
+            return [data, ]
+        else:
+            raise NotImplementedError

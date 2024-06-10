@@ -230,17 +230,18 @@ class SlurmDirectoryManager:
 
     def zip_exp(self):
         """procedure for creating a zip backup"""
-        src = self.get_exp_src()
+        src_list = util.make_iterable(self.get_exp_src())
         dst = self.get_exp_dst()
-        self.dir_size_validation(src)
-
-        shutil.make_archive(dst, "zip", src)
+        for src in src_list:
+            self.dir_size_validation(src)
+            shutil.make_archive(dst, "zip", src)
 
     def create_single_copy(self):
         """creates a copy of the exp for slurm execution"""
-        src = self.get_exp_src()
+        src_list = util.make_iterable(self.get_exp_src())
         dst = self.get_exp_dst()
-        self._copy_files(src, dst)
+        for src in src_list:
+            self._copy_files(src, dst)
 
     def create_multi_copy(self, num_jobs: int):
         """creates multiple copies of the exp, one for each slurm job
@@ -248,12 +249,13 @@ class SlurmDirectoryManager:
         Args:
             num_jobs (int): number of total jobs
         """
-        src = self.get_exp_src()
+        src_list = util.make_iterable(self.get_exp_src())
         dst_base = self.get_exp_dst()
 
         for i in range(num_jobs):
             dst = os.path.join(dst_base, str(i))
-            self._copy_files(src, dst)
+            for src in src_list:
+                self._copy_files(src, dst)
 
         # Add MultiCopy ChangeDir to Slurmconf
         self.slurm_config.slurm_conf[SKEYS.SH_LINES] += "\ncd {} \n".format(
