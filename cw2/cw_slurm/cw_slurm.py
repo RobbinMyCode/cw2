@@ -390,7 +390,7 @@ def run_slurm(conf: cw_config.Config, num_jobs: int) -> None:
 
     # Write and call slurm script
     slurm_script = write_slurm_script(sc, dir_mgr)
-    cmd = "sbatch --priority=1000 --nice=-20 --qos=high " + slurm_script
+    cmd = "sbatch --priority=1000 " + slurm_script
     print(cmd)
     subprocess.check_output(cmd, shell=True)
 
