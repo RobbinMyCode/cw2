@@ -331,7 +331,9 @@ class SlurmDirectoryManager:
         if self.m == self.MODE_COPY or self.m == self.MODE_MULTI:
             src_list = util.make_iterable(self.get_exp_src())
             dst = self.get_exp_dst()
-            dst = os.path.join(dst, src_list[0])
+            pkg_name = os.path.basename(os.path.abspath(src_list[0]))
+            pkg_sub_name = os.path.basename(os.getcwd())
+            dst = os.path.join(dst, pkg_name, pkg_sub_name)
             return dst
 
         return self.get_exp_src()
