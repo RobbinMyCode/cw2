@@ -430,10 +430,12 @@ def write_slurm_script(slurm_conf: SlurmConfig, dir_mgr: SlurmDirectoryManager) 
         )
 
         tline = tline.replace(
-            "%%experiment_execution_dir%%", dir_mgr.get_exp_exec_dir()
+            "%%experiment_execution_dir%%",
+            os.path.abspath(dir_mgr.get_exp_exec_dir())
         )
 
-        tline = tline.replace("%%slurm_log%%", sc[SKEYS.SLURM_LOG])
+        tline = tline.replace("%%slurm_log%%",
+                              os.path.abspath(sc[SKEYS.SLURM_LOG]))
 
         tline = tline.replace("%%ntasks%%", "{:d}".format(sc["ntasks"]))
         tline = tline.replace("%%cpus-per-task%%", "{:d}".format(sc["cpus-per-task"]))
