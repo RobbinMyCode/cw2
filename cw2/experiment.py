@@ -49,7 +49,7 @@ class AbstractExperiment(abc.ABC):
 
 class AbstractIterativeExperiment(AbstractExperiment):
     @abc.abstractmethod
-    def iterate(self, cw_config: dict, rep: int, n: int) -> dict:
+    def iterate(self, cw_config: dict, rep: int, n: int, old_config=None) -> dict:
         """needs to be implemented by subclass.
         The iteration procedure.
 
@@ -74,11 +74,11 @@ class AbstractIterativeExperiment(AbstractExperiment):
         """
         raise NotImplementedError
 
-    def run(self, cw_config: dict, rep: int, logger: cw_logging.LoggerArray) -> None:
+    def run(self, cw_config: dict, rep: int, logger: cw_logging.LoggerArray, old_config=None) -> None:
         for n in range(cw_config["iterations"]):
             surrender = False
             try:
-                res = self.iterate(cw_config, rep, n)
+                res = self.iterate(cw_config, rep, n, old_config)
             except ExperimentSurrender as e:
                 res = e.payload
                 surrender = True

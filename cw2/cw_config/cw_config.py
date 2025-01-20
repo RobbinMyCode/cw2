@@ -14,10 +14,13 @@ class Config:
         experiment_selections: List[str] = None,
         debug: bool = False,
         debug_all: bool = False,
-        prefix_with_timestamp: bool = False
+        prefix_with_timestamp: bool = False,
+        old_config_path: str = None,
     ):
         self.slurm_config = None
+        self.old_slurm_config = None
         self.exp_configs = None
+        self.old_exp_configs = None
 
         self.f_name = None
         self.config_path = config_path
@@ -26,7 +29,7 @@ class Config:
         self.prefix_with_timestamp = prefix_with_timestamp
 
         if config_path is not None:
-            self.load_config(config_path, experiment_selections, debug, debug_all)
+            self.load_config(config_path, experiment_selections, debug, debug_all, old_config_path)
 
     def load_config(
         self,
@@ -34,6 +37,7 @@ class Config:
         experiment_selections: List[str] = None,
         debug: bool = False,
         debug_all: bool = False,
+        old_config_path: str = None
     ) -> None:
         """Loads config from YAML file
         The config can include multiple experiments, DEFAULT paramters and a SLURM configuration
@@ -41,17 +45,23 @@ class Config:
         Arguments:
             config_path {str} -- path to a YAML configuraton file
             experiment_selections (List[str], optional): List of specific experiments to run. If None runs all. Defaults to None.
+            old_config_path {str} -- path to a YAML configuraton file of pretrained agent (that shall be corrected)
         """
 
         self.config_path = config_path
         self.f_name = os.path.basename(config_path)
 
         self.exp_selections = experiment_selections
-
         slurm_configs, self.exp_configs = self._parse_configs(
             config_path, experiment_selections, debug, debug_all
         )
         self.slurm_config = self._filter_slurm_configs(slurm_configs)
+
+        if old_config_path is not None:
+            old_slurm_configs, self.old_exp_configs = self._parse_configs(
+                old_config_path, experiment_selections, debug, debug_all
+            )
+        self.old_slurm_config = self._filter_slurm_configs(slurm_configs)
 
     @staticmethod
     def _filter_slurm_configs(slurm_configs: List[dict]) -> dict:

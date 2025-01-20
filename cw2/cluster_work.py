@@ -14,7 +14,8 @@ class ClusterWork:
             self.args["experiments"],
             self.args["debug"],
             self.args["debugall"],
-            self.args["prefix_with_timestamp"]
+            self.args["prefix_with_timestamp"],
+            self.args["old_config"]
         )
 
         self.logArray = cw_logging.LoggerArray()
@@ -47,7 +48,7 @@ class ClusterWork:
             factory = job.JobFactory(
                 self.exp_cls, self.logArray, delete, root_dir, read_only
             )
-            self.joblist = factory.create_jobs(self.config.exp_configs)
+            self.joblist = factory.create_jobs(self.config.exp_configs, self.config.old_exp_configs)
         return self.joblist
 
     def run(self, root_dir: str = "", sch: scheduler.AbstractScheduler = None):

@@ -20,9 +20,10 @@ class Job:
         delete_old_files: bool = False,
         root_dir: str = "",
         read_only: bool = False,
+        old_config_task = None
     ):
         self.tasks = tasks
-
+        self.old_config_task = old_config_task
         if exp_cls is not None:
             self.exp = exp_cls()
         self.logger = logger
@@ -37,7 +38,7 @@ class Job:
             self.__create_experiment_directory(tasks, delete_old_files, root_dir)
 
     def __create_experiment_directory(
-        self, tasks: List[Dict], delete_old_files=False, root_dir=""
+        self, tasks: List[Dict], delete_old_files=False, root_dir="", old_config_task=None
     ):
         """internal function creating the directories in which the job will write its data.
 
@@ -86,8 +87,8 @@ class Job:
 
         self.logger.initialize(c, r, rep_path)
         try:
-            self.exp.initialize(c, r, self.logger)
-            self.exp.run(c, r, self.logger)
+            self.exp.initialize(c, r, self.logger, self.old_config_task)
+            self.exp.run(c, r, self.logger, self.old_config_task)
         except cw_error.ExperimentSurrender as s:
             cw_logging.getLogger().warning("SURRENDER: {}".format(rep_path))
             surrender = s
@@ -188,7 +189,7 @@ class JobFactory:
                 tasks.append(exp_group[start_rep : start_rep + rep_portion])
         return tasks
 
-    def create_jobs(self, exp_configs: List[Dict]) -> List[Job]:
+    def create_jobs(self, exp_configs: List[Dict], old_exp_config: List[Dict]=None) -> List[Job]:
         """creates a list of all jobs.
 
         Args:
@@ -198,6 +199,10 @@ class JobFactory:
             List[Job]: list of configured jobs.
         """
         task_list = self._divide_tasks(exp_configs)
+        old_config_task = self._divide_tasks(old_exp_config)
+        assert len(old_config_task) == 1, "Old configuration should have only 1 task, if you want it otherwise, please adapt the code (job.py, create_jobs)"
+        old_config_task = old_config_task[0]
+
         joblist = []
         for task in task_list:
             j = Job(
@@ -207,6 +212,7 @@ class JobFactory:
                 self.delete_old_files,
                 self.root_dir,
                 self.read_only,
+                old_config_task = old_config_task
             )
             joblist.append(j)
         return joblist

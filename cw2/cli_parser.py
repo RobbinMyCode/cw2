@@ -12,7 +12,12 @@ class Arguments:
             default=None,
             help="Run only the specified job. CAVEAT: Should only be used with slurm arrays.",
         )
-
+        p.add_argument(
+            "--old_config",
+            type=str,
+            default=None,
+            help="Old config file-path. Should only be used in order to train a correction agent",
+        )
         # XXX: Disable delete for now
         # p.add_argument('-d', '--delete', action='store_true',
         #                help='CAUTION deletes results of previous runs.')
